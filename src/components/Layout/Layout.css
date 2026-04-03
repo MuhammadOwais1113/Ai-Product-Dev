@@ -16,6 +16,7 @@
 .layout-content {
     flex: 1;
     padding: 1.5rem;
+    padding-bottom: 0.5rem;
     overflow-y: auto;
 }
 
@@ -36,4 +37,33 @@
 
 ::-webkit-scrollbar-thumb:hover {
     background: #94A3B8;
+}
+
+/* ─── Legal Disclaimer Banner ──────────────────────────────── */
+.legal-disclaimer-banner {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.625rem;
+    padding: 0.75rem 1.5rem;
+    background: linear-gradient(90deg, rgba(245, 158, 11, 0.06), rgba(245, 158, 11, 0.03));
+    border-top: 1px solid rgba(245, 158, 11, 0.2);
+    flex-shrink: 0;
+}
+
+.legal-disclaimer-banner .disclaimer-icon {
+    color: #D97706;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.legal-disclaimer-banner p {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+    margin: 0;
+}
+
+.legal-disclaimer-banner strong {
+    color: #92400E;
+    font-weight: 600;
 }

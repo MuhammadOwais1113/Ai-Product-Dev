@@ -7,7 +7,9 @@ import {
     HelpCircle,
     Link,
     Zap,
-    CheckCircle
+    CheckCircle,
+    AlertTriangle,
+    Info
 } from 'lucide-react';
 import './Transparency.css';
 
@@ -17,7 +19,7 @@ const Transparency = () => {
             <div className="page-header">
                 <div>
                     <h1 className="page-title">Explainability & Transparency</h1>
-                    <p className="page-subtitle">Understand how LegalMind's AI formulates reasoning and tracks legal provenance.</p>
+                    <p className="page-subtitle">Understand how LegalDraft's AI formulates reasoning and tracks document provenance.</p>
                 </div>
                 <div className="confidence-badge">
                     <ShieldCheck size={18} className="text-success" />
@@ -152,6 +154,54 @@ const Transparency = () => {
                                 <Zap size={16} className="text-primary mr-2" />
                                 <span className="text-sm">Strategic Insight: Cases citing 2020 CLC 1422 explicitly in the initial petition have a 14% higher early settlement rate.</span>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Technical Limitations Section */}
+            <div className="card limitations-card" id="technical-limitations">
+                <div className="card-header">
+                    <h2><AlertTriangle className="inline-icon text-warning" /> Technical Limitations & How It Works</h2>
+                </div>
+                <div className="limitations-content">
+                    <div className="limitation-callout">
+                        <Info size={18} className="limitation-callout-icon" />
+                        <p>
+                            This MVP utilizes LLM-based text extraction and may occasionally produce
+                            false positives or miss nuanced contextual clauses. The system is designed
+                            to assist — not replace — professional legal review.
+                        </p>
+                    </div>
+
+                    <div className="limitations-grid">
+                        <div className="limitation-item">
+                            <h4>📄 Text Extraction</h4>
+                            <p>
+                                Documents are processed using AI-powered OCR and text parsing.
+                                Scanned PDFs or low-quality images may yield incomplete extractions.
+                            </p>
+                        </div>
+                        <div className="limitation-item">
+                            <h4>🔍 Clause Matching</h4>
+                            <p>
+                                The system compares extracted clauses against a statutory checklist.
+                                Non-standard clause phrasing may not be recognized accurately.
+                            </p>
+                        </div>
+                        <div className="limitation-item">
+                            <h4>⚖️ Contradiction Detection</h4>
+                            <p>
+                                Ghost data (conflicting values) is detected via contextual comparison.
+                                Implicit contradictions may require human judgment to identify.
+                            </p>
+                        </div>
+                        <div className="limitation-item">
+                            <h4>📊 Confidence Scoring</h4>
+                            <p>
+                                Scores reflect statistical confidence in the analysis, not legal validity.
+                                A high score does not guarantee compliance with all applicable laws.
+                            </p>
                         </div>
                     </div>
                 </div>

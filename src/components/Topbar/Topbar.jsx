@@ -9,7 +9,7 @@ const Topbar = () => {
                 <Search className="search-icon" size={18} />
                 <input
                     type="text"
-                    placeholder="Search cases, precedents, or clients..."
+                    placeholder="Search agreements, validations, or tenants..."
                     className="search-input"
                 />
             </div>
@@ -23,8 +23,8 @@ const Topbar = () => {
                 <div className="profile-dropdown">
                     <UserCircle size={24} className="profile-icon" />
                     <div className="profile-info">
-                        <span className="profile-name">Adv. A. Khan</span>
-                        <span className="profile-role">Senior Partner</span>
+                        <span className="profile-name">Ahmed Khan</span>
+                        <span className="profile-role">Property Manager</span>
                     </div>
                     <ChevronDown size={16} className="dropdown-icon" />
                 </div>

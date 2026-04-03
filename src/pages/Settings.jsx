@@ -19,7 +19,7 @@ const Settings = () => {
         <div className="settings-container animate-fade-in">
             <div className="page-header">
                 <h1 className="page-title">Settings & Preferences</h1>
-                <p className="page-subtitle">Manage your personal profile, notifications, and firm workspace preferences.</p>
+                <p className="page-subtitle">Manage your personal profile, notifications, and agency workspace preferences.</p>
             </div>
 
             <div className="settings-layout">
@@ -86,24 +86,23 @@ const Settings = () => {
 
                             <div className="form-group mb-6">
                                 <label className="form-label">Professional Title / Role</label>
-                                <input type="text" className="input-field" defaultValue="Senior Partner" />
+                                <input type="text" className="input-field" defaultValue="Property Manager" />
                             </div>
 
                             <div className="form-group mb-6">
-                                <label className="form-label">Bar Council Registration #</label>
-                                <input type="text" className="input-field" defaultValue="PBC-4921-PWR" />
+                                <label className="form-label">Agency License #</label>
+                                <input type="text" className="input-field" defaultValue="REA-4921-LHR" />
                             </div>
 
                             <div className="form-group mb-6">
-                                <label className="form-label">Law Specialization Preference (For AI Context)</label>
+                                <label className="form-label">Property Type Preference (For AI Context)</label>
                                 <select className="input-field">
-                                    <option value="civil">General Civil Litigation</option>
-                                    <option value="family">Family Law</option>
-                                    <option value="corporate">Corporate & Commercial</option>
-                                    <option value="property" selected>Real Estate & Property Dispute</option>
-                                    <option value="criminal">Criminal Defense (Not Optimized)</option>
+                                    <option value="residential">Residential Rentals</option>
+                                    <option value="commercial">Commercial Leases</option>
+                                    <option value="mixed" selected>Mixed (Residential & Commercial)</option>
+                                    <option value="industrial">Industrial Properties</option>
                                 </select>
-                                <p className="text-xs text-muted mt-1">This preference tunes the AI's default drafting style and precedent recommendations.</p>
+                                <p className="text-xs text-muted mt-1">This preference tunes the AI's default validation rules and agreement templates.</p>
                             </div>
 
                             <div className="form-actions border-top-light pt-6 mt-6 flex justify-end">
@@ -186,11 +185,11 @@ const Settings = () => {
                     {activeTab === 'firm' && (
                         <div className="animate-fade-in">
                             <h2 className="settings-section-title">Firm Workspace Details</h2>
-                            <p className="text-sm text-muted mb-6">These settings affect all members in your LegalMind organization.</p>
+                            <p className="text-sm text-muted mb-6">These settings affect all members in your LegalDraft organization.</p>
 
                             <div className="form-group mb-6">
-                                <label className="form-label">Firm / Organization Name</label>
-                                <input type="text" className="input-field bg-main text-muted" readOnly defaultValue="Shah & Khan Associates" />
+                                <label className="form-label">Agency / Organization Name</label>
+                                <input type="text" className="input-field bg-main text-muted" readOnly defaultValue="Khan Property Associates" />
                             </div>
 
                             <div className="form-group mb-6">

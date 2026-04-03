@@ -27,7 +27,7 @@ const Login = () => {
         fullName: '',
         phone: '',
         barCouncilNo: '',
-        role: 'lawyer'
+        role: 'agent'
     });
 
     const handleInputChange = (e) => {
@@ -50,7 +50,7 @@ const Login = () => {
             setIsLoading(false);
             // In a real app, you would set auth context/tokens here
             console.log(isLogin ? "Logged in with:" : "Signed up with:", formData);
-            // Default to senior_lawyer for demo layout purposes, or whatever was selected
+            // Default to agent for demo layout purposes, or whatever was selected
             navigate('/');
         }, 1200);
     };
@@ -62,12 +62,12 @@ const Login = () => {
                 <div className="brand-content">
                     <div className="brand-logo">
                         <Scale size={48} className="text-gold" />
-                        <h1>LegalMind</h1>
+                        <h1>LegalDraft</h1>
                     </div>
 
                     <div className="brand-message">
-                        <h2>Advanced Legal Research & Drafting Intelligence.</h2>
-                        <p>Secure, compliant, and precision-driven tools designed exclusively for Civil Law practitioners in Pakistan.</p>
+                        <h2>Smart Rental Agreement Validation & Drafting.</h2>
+                        <p>Secure, compliant, and precision-driven tools designed exclusively for Real Estate Agents and Property Managers in Pakistan.</p>
                     </div>
 
                     <div className="trust-indicators">
@@ -97,7 +97,7 @@ const Login = () => {
                         <p className="text-muted">
                             {isLogin
                                 ? "Enter your credentials to access your secure workspace."
-                                : "Join LegalMind to automate your legal workflows."
+                                : "Join LegalDraft to streamline your rental agreements."
                             }
                         </p>
                     </div>
@@ -113,7 +113,7 @@ const Login = () => {
                                             type="text"
                                             name="fullName"
                                             className="input-field icon-pad"
-                                            placeholder="Advocate Name"
+                                            placeholder="Your Full Name"
                                             value={formData.fullName}
                                             onChange={handleInputChange}
                                             required={!isLogin}
@@ -138,14 +138,14 @@ const Login = () => {
                                         </div>
                                     </div>
                                     <div className="form-group">
-                                        <label className="form-label">Bar Council No.</label>
+                                        <label className="form-label">Agency License No.</label>
                                         <div className="input-with-icon">
                                             <Building2 size={18} className="input-icon" />
                                             <input
                                                 type="text"
                                                 name="barCouncilNo"
                                                 className="input-field icon-pad"
-                                                placeholder="e.g. PBC-XXXX"
+                                                placeholder="e.g. REA-XXXX"
                                                 value={formData.barCouncilNo}
                                                 onChange={handleInputChange}
                                             />
@@ -161,9 +161,9 @@ const Login = () => {
                                         value={formData.role}
                                         onChange={handleInputChange}
                                     >
-                                        <option value="lawyer">Advocate / Lawyer</option>
-                                        <option value="senior_lawyer">Senior Partner</option>
-                                        <option value="admin">Law Firm Admin</option>
+                                        <option value="agent">Real Estate Agent</option>
+                                        <option value="property_manager">Property Manager</option>
+                                        <option value="admin">Agency Admin</option>
                                     </select>
                                 </div>
                             </>
@@ -245,7 +245,7 @@ const Login = () => {
                     </div>
 
                     <div className="compliance-footer">
-                        <p>By proceeding, you agree to LegalMind's <a href="#" className="text-link">Terms of Service</a> & <a href="#" className="text-link">Data Privacy Policy</a>.</p>
+                        <p>By proceeding, you agree to LegalDraft's <a href="#" className="text-link">Terms of Service</a> & <a href="#" className="text-link">Data Privacy Policy</a>.</p>
                     </div>
                 </div>
             </div>

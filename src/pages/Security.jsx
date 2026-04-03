@@ -17,7 +17,7 @@ const Security = () => {
             <div className="page-header">
                 <div>
                     <h1 className="page-title">Security & Audit Center</h1>
-                    <p className="page-subtitle">Monitor access logs, data encryption status, and firm-wide permissions.</p>
+                    <p className="page-subtitle">Monitor access logs, data encryption status, and agency-wide permissions.</p>
                 </div>
                 <button className="btn btn-outline">
                     <Download size={16} /> Export Audit Log
@@ -50,7 +50,7 @@ const Security = () => {
                         <div className="sec-icon bg-warning-light text-warning"><Key size={20} /></div>
                         <div>
                             <p className="text-sm text-muted">Active Sessions</p>
-                            <p className="font-semibold">24 Firm Members</p>
+                            <p className="font-semibold">24 Team Members</p>
                         </div>
                     </div>
                 </div>
@@ -81,7 +81,7 @@ const Security = () => {
                             <tbody>
                                 <tr>
                                     <td>24-Oct-23 14:32:01</td>
-                                    <td><strong>Adv. Sarah Tariq</strong><br /><span className="text-xs text-muted">Lawyer</span></td>
+                                    <td><strong>Sarah Tariq</strong><br /><span className="text-xs text-muted">Agent</span></td>
                                     <td><span className="badge badge-info">DOCUMENT_VIEW</span></td>
                                     <td>Client_Contract_v2.pdf</td>
                                     <td>192.168.1.105<br /><span className="text-xs text-muted">MacBook Pro</span></td>
@@ -124,7 +124,7 @@ const Security = () => {
                     <div className="permission-list">
                         <div className="permission-item">
                             <div className="flex justify-between items-center mb-1">
-                                <h4>Firm Administrator</h4>
+                                <h4>Agency Administrator</h4>
                                 <span className="text-xs text-muted">2 Users</span>
                             </div>
                             <p className="text-sm text-success mb-2">Full Access (Billing, Users, All Cases)</p>
@@ -133,7 +133,7 @@ const Security = () => {
 
                         <div className="permission-item mt-4">
                             <div className="flex justify-between items-center mb-1">
-                                <h4>Senior Partner</h4>
+                                <h4>Property Manager</h4>
                                 <span className="text-xs text-muted">5 Users</span>
                             </div>
                             <p className="text-sm text-info mb-2">Can assign cases, override AI drafts</p>
@@ -142,7 +142,7 @@ const Security = () => {
 
                         <div className="permission-item mt-4">
                             <div className="flex justify-between items-center mb-1">
-                                <h4>Lawyer / Advocate</h4>
+                                <h4>Real Estate Agent</h4>
                                 <span className="text-xs text-muted">12 Users</span>
                             </div>
                             <p className="text-sm text-warning mb-2">Access to assigned cases only</p>
