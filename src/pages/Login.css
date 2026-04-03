@@ -1,0 +1,272 @@
+/* Ensure body has no margin for full screen */
+body {
+    margin: 0;
+}
+
+.login-container {
+    display: flex;
+    min-height: 100vh;
+    width: 100vw;
+    background-color: var(--bg-main);
+}
+
+/* Left Panel - Branding */
+.login-brand-panel {
+    flex: 1;
+    background-color: var(--primary);
+    background-image: linear-gradient(135deg, var(--primary) 0%, #061020 100%);
+    color: white;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 4rem;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Decorative subtle background elements */
+.login-brand-panel::before {
+    content: '';
+    position: absolute;
+    top: -10%;
+    left: -10%;
+    width: 50%;
+    height: 50%;
+    background: radial-gradient(circle, rgba(212, 175, 55, 0.05) 0%, transparent 70%);
+    border-radius: 50%;
+}
+
+.brand-content {
+    position: relative;
+    z-index: 1;
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+.brand-logo {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 3rem;
+}
+
+.brand-logo h1 {
+    font-size: 2.5rem;
+    letter-spacing: -0.5px;
+    color: white;
+    margin: 0;
+}
+
+.text-gold {
+    color: #D4AF37;
+    /* Trust-building accent color */
+}
+
+.brand-message h2 {
+    font-size: 2rem;
+    line-height: 1.2;
+    margin-bottom: 1.5rem;
+    color: white;
+}
+
+.brand-message p {
+    font-size: 1.125rem;
+    color: #9CA3AF;
+    line-height: 1.6;
+    margin-bottom: 4rem;
+}
+
+.trust-indicators {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding-top: 2rem;
+}
+
+.indicator {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+}
+
+.indicator h4 {
+    font-size: 1rem;
+    color: white;
+    margin-bottom: 0.25rem;
+}
+
+.indicator span {
+    font-size: 0.875rem;
+    color: #9CA3AF;
+}
+
+/* Right Panel - Login Form */
+.login-form-panel {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    background-color: var(--bg-main);
+}
+
+.login-form-wrapper {
+    background-color: white;
+    padding: 3.5rem;
+    border-radius: var(--radius-lg);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
+    width: 100%;
+    max-width: 540px;
+    border: 1px solid var(--border-color);
+}
+
+.auth-header {
+    margin-bottom: 2rem;
+}
+
+.auth-header h2 {
+    font-size: 1.75rem;
+    color: var(--primary);
+    margin-bottom: 0.5rem;
+}
+
+.auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.form-row {
+    display: flex;
+    gap: 1.25rem;
+}
+
+.form-row .form-group {
+    flex: 1;
+}
+
+.flex-between {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.password-toggle {
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.password-toggle:hover {
+    color: var(--primary);
+}
+
+.login-btn {
+    padding: 0.875rem;
+    font-size: 1rem;
+    font-weight: 600;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.auth-loader {
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        opacity: 0.6;
+    }
+
+    50% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 0.6;
+    }
+}
+
+.auth-toggle-section {
+    margin-top: 2rem;
+    text-align: center;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.auth-toggle-section p {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+}
+
+.compliance-footer {
+    margin-top: 2rem;
+    text-align: center;
+}
+
+.compliance-footer p {
+    font-size: 0.75rem;
+    color: #9CA3AF;
+}
+
+/* Utilities */
+.text-xs {
+    font-size: 0.75rem;
+}
+
+.mt-1 {
+    margin-top: 0.25rem;
+}
+
+.mt-4 {
+    margin-top: 1rem;
+}
+
+.mt-6 {
+    margin-top: 1.5rem;
+}
+
+.ml-1 {
+    margin-left: 0.25rem;
+}
+
+.ml-2 {
+    margin-left: 0.5rem;
+}
+
+.w-full {
+    width: 100%;
+}
+
+.font-semibold {
+    font-weight: 600;
+}
+
+@media (max-width: 1024px) {
+    .login-brand-panel {
+        display: none;
+        /* Hide branding on smaller screens to focus on login */
+    }
+}
+
+@media (max-width: 600px) {
+    .login-form-wrapper {
+        padding: 2rem;
+    }
+
+    .form-row {
+        flex-direction: column;
+        gap: 1.25rem;
+    }
+}

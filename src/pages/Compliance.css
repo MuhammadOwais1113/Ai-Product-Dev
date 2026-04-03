@@ -1,0 +1,248 @@
+.compliance-container {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.compliance-overview {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 1.5rem;
+}
+
+.overview-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+}
+
+.text-center {
+    text-align: center;
+}
+
+.text-sm {
+    font-size: 0.875rem;
+}
+
+/* Score Ring */
+.score-ring {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    border: 8px solid var(--border-color);
+    background-color: var(--bg-main);
+    position: relative;
+}
+
+.score-ring.high-risk {
+    border-color: var(--danger);
+    /* mock a partial fill conceptually */
+    background: conic-gradient(var(--danger) 72%, var(--border-color) 0);
+}
+
+.score-ring.high-risk::before {
+    content: '';
+    position: absolute;
+    inset: 8px;
+    background-color: var(--bg-card);
+    border-radius: 50%;
+}
+
+.score-value {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--text-main);
+    line-height: 1;
+    position: relative;
+    z-index: 1;
+}
+
+.score-max {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    position: relative;
+    z-index: 1;
+}
+
+.risk-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border-radius: 999px;
+    font-weight: 600;
+    font-size: 0.875rem;
+    border: 1px solid transparent;
+}
+
+.border-danger {
+    border-color: rgba(239, 68, 68, 0.3);
+}
+
+/* Stats Boxes */
+.overview-stats {
+    display: grid;
+    grid-template-rows: repeat(3, 1fr);
+    gap: 1rem;
+}
+
+.stat-box {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    box-shadow: var(--shadow-sm);
+}
+
+.border-warning-left {
+    border-left: 4px solid var(--warning);
+}
+
+.border-danger-left {
+    border-left: 4px solid var(--danger);
+}
+
+.stat-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.bg-warning-light {
+    background-color: rgba(245, 158, 11, 0.1);
+}
+
+.text-warning {
+    color: var(--warning);
+}
+
+.stat-details {
+    display: flex;
+    flex-direction: column;
+}
+
+.stat-num {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--text-main);
+    line-height: 1.2;
+}
+
+.stat-label {
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+/* Audit List */
+.compliance-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.audit-list-card .card-header {
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 1rem;
+    margin-bottom: 0;
+}
+
+.audit-items {
+    display: flex;
+    flex-direction: column;
+}
+
+.audit-item {
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 2rem;
+    transition: background-color var(--transition-fast);
+}
+
+.audit-item:last-child {
+    border-bottom: none;
+}
+
+.audit-item:hover {
+    background-color: var(--bg-main);
+}
+
+.audit-meta h4 {
+    font-size: 1rem;
+    color: var(--text-main);
+    margin-bottom: 0.25rem;
+}
+
+.audit-meta p {
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+.audit-desc p {
+    font-size: 0.875rem;
+    color: var(--text-main);
+    line-height: 1.5;
+}
+
+.ai-correction {
+    margin-top: 1rem;
+    background-color: rgba(59, 130, 246, 0.05);
+    border: 1px solid rgba(59, 130, 246, 0.2);
+    padding: 1rem;
+    border-radius: var(--radius-md);
+    font-size: 0.875rem;
+}
+
+.ai-correction strong {
+    color: var(--info);
+}
+
+/* Status variants */
+.audit-item.error .audit-meta h4 {
+    color: var(--danger);
+}
+
+.audit-item.warning .audit-meta h4 {
+    color: var(--warning);
+}
+
+.audit-item.success {
+    grid-template-columns: 1fr;
+    padding: 1rem 1.5rem;
+}
+
+.audit-item.success .audit-meta h4 {
+    color: var(--success);
+}
+
+.btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+}
+
+@media (max-width: 900px) {
+    .compliance-overview {
+        grid-template-columns: 1fr;
+    }
+
+    .audit-item {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+}
