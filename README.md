@@ -76,9 +76,20 @@ pip install -r requirements.txt
 ```
 
 **Environment Variables:**
-Create a `.env` file exactly inside the `backend/` directory and structure it as follows:
+Create a `.env` file exactly inside the `backend/` directory and structure it as follows (see also `backend/.env.example`):
 ```env
 GEMINI_API_KEY=your_actual_gemini_api_key_here
+# Optional — change if this model hits free-tier limits (see https://ai.google.dev/gemini-api/docs/rate-limits )
+GEMINI_MODEL=gemini-2.0-flash
+# Strongly recommended on Gemini free tier (one API call per upload instead of N+1):
+GEMINI_VALIDATION_MODE=single
+# chunked = split document + one merge call (more requests, richer cross-section merge)
+# Optional — chunked only: skip merge LLM (saves 1 call); cross-doc contradictions weaker
+# SKIP_MERGE_GEMINI=1
+# Optional — chunked only: cap chunk count (overflow merged into last chunk)
+# MAX_CHUNKS=3
+# Optional — delay between chunk requests (default 0.75) to reduce 429 bursts
+GEMINI_INTER_CHUNK_DELAY_SEC=0.75
 ```
 
 ```bash
@@ -98,26 +109,30 @@ Main workhorse endpoint. Consumes a raw PDF form-data file and returns the LLM v
 - `Content-Type: multipart/form-data`
 - Body: `file` (Binary PDF File)
 
-**Success Summary (200 OK):**
+**Success Summary (200 OK):**  
+The PDF text is cleaned. With **`GEMINI_VALIDATION_MODE=single`** (recommended on free tier), one Gemini request analyzes the full text. With **`chunked`** (the default when this variable is omitted or set to `chunked`), the doc is split into chunks, each chunk is analyzed, then results are merged (more API calls). The response includes **legacy fields** (`confidence_score`, `contradictions`, `missing_clauses`) for the UI plus extended analysis when merge/chunking ran:
+
 ```json
 {
+  "document_summary": "2–5 sentence overview of the agreement.",
+  "extracted_sections": [{"title": "Rent", "chunk_indices": [0, 2], "summary": "..."}],
+  "validation_issues": [{"description": "...", "severity": "Medium", "chunk_index": 1, "chunk_label": "..."}],
+  "missing_clauses": [{"clause_name": "Dispute Resolution", "severity": "Critical", "description": "..."}],
+  "risky_clauses": [{"clause_or_issue": "...", "risk_description": "...", "chunk_index": 0, "chunk_label": "..."}],
+  "recommendations": ["..."],
+  "processing_notes": ["Optional pipeline or chunk warnings."],
   "confidence_score": 88,
   "contradictions": [
     {
-      "description": "The security deposit mentions Rs 90,000 on page 1, but Schedule A asserts it is Rs 120,000.",
+      "description": "Security deposit differs between sections.",
       "location_1": "Section 2",
       "location_2": "Schedule A"
-    }
-  ],
-  "missing_clauses": [
-    {
-      "clause_name": "Dispute Resolution",
-      "severity": "Critical",
-      "description": "It is not defined where an arbitration takes place."
     }
   ]
 }
 ```
+
+**Quota / 429:** If Google returns rate limits, set **`GEMINI_VALIDATION_MODE=single`**, try another **`GEMINI_MODEL`** with available quota, or enable billing. Chunked mode uses **several requests per upload**; use **`MAX_CHUNKS`** and **`SKIP_MERGE_GEMINI=1`** to reduce calls, or increase **`GEMINI_INTER_CHUNK_DELAY_SEC`**.
 
 ### `GET /health`
 System viability check used to verify FastAPI initialization.
@@ -132,12 +147,15 @@ Ai-Product-Dev/
 ├── backend/
 │   ├── main.py                  # Entrypoint, FastAPI App & Routing
 │   ├── services/
-│   │   ├── llm_engine.py        # Gemini API queries & logic limits handled
-│   │   └── pdf_extractor.py     # Binary parsing of PyMuPDF 
+│   │   ├── llm_engine.py        # Chunked Gemini calls, merge, retries, quotas
+│   │   ├── text_pipeline.py     # Clean PDF text + semantic / size chunking
+│   │   └── pdf_extractor.py     # PyMuPDF page extraction
 │   ├── models/
-│   │   └── schemas.py           # Pydantic schemas forcing JSON constraints
+│   │   └── schemas.py           # Pydantic schemas (FullValidationReport + chunk models)
 │   ├── prompts/
-│   │   └── validation_prompt.txt # Master LLM instructions separating prompt logic
+│   │   ├── chunk_validation_prompt.txt
+│   │   ├── merge_validation_prompt.txt
+│   │   └── validation_prompt.txt # Legacy single-pass prompt (unused by default)
 │   ├── .env                     # Hidden - Stores API Keys
 │   └── requirements.txt         # Server-side PyPI dependencies
 ├── src/

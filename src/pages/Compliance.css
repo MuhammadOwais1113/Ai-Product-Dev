@@ -840,4 +840,393 @@
         transform: rotate(90deg);
         align-self: center;
     }
+
+    .success-header-badges {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}
+
+/* ─── Demo mode (pipeline + results polish) ─────────────────── */
+.page-demo-banner {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+    max-width: 36rem;
+}
+
+.page-demo-banner svg {
+    flex-shrink: 0;
+    margin-top: 0.125rem;
+    color: var(--accent);
+}
+
+.page-demo-code {
+    font-size: 0.75rem;
+    padding: 0.1rem 0.35rem;
+    border-radius: var(--radius-sm);
+    background: var(--bg-main);
+    border: 1px solid var(--border-color);
+    color: var(--text-main);
+}
+
+.demo-pipeline-card {
+    position: relative;
+    max-width: 440px;
+    padding-top: 2.5rem;
+}
+
+.demo-pipeline-badge {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 0.35rem 0.65rem;
+    border-radius: 999px;
+    background: linear-gradient(135deg, rgba(183, 148, 85, 0.12), rgba(10, 25, 47, 0.06));
+    border: 1px solid rgba(183, 148, 85, 0.25);
+    color: var(--accent);
+}
+
+.demo-pipeline-icon {
+    margin-bottom: 1.25rem;
+}
+
+.demo-overall-progress {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    width: 100%;
+    max-width: 100%;
+    margin-top: 1.75rem;
+}
+
+.demo-progress-fill {
+    transition: width 0.35s ease-out;
+    background: linear-gradient(90deg, rgba(59, 130, 246, 0.85), var(--accent));
+}
+
+.demo-pipeline-steps {
+    list-style: none;
+    margin: 1.75rem 0 0;
+    padding: 0;
+    width: 100%;
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.demo-pipeline-step {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+    padding: 0.55rem 0.75rem;
+    border-radius: var(--radius-md);
+    border: 1px solid transparent;
+    background: var(--bg-main);
+    transition:
+        color 0.35s ease,
+        border-color 0.35s ease,
+        background-color 0.35s ease,
+        transform 0.25s ease;
+}
+
+.demo-pipeline-step.active {
+    color: var(--text-main);
+    border-color: rgba(183, 148, 85, 0.28);
+    background: rgba(183, 148, 85, 0.06);
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.demo-pipeline-step.done {
+    color: var(--text-main);
+    opacity: 0.92;
+}
+
+.demo-step-dot {
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    color: var(--success);
+}
+
+.demo-pipeline-step.active .demo-step-dot {
+    color: var(--accent);
+}
+
+.demo-step-spin {
+    animation: spin 0.9s linear infinite;
+}
+
+.demo-step-pending-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--border-color);
+}
+
+.demo-step-label {
+    line-height: 1.35;
+}
+
+.success-header-badges {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.625rem;
+}
+
+.demo-risk-badge {
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.4rem 0.85rem;
+    border-radius: 999px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-main);
+    color: var(--text-main);
+}
+
+.demo-risk-medium {
+    border-color: rgba(217, 119, 6, 0.35);
+    background: rgba(217, 119, 6, 0.08);
+    color: #B45309;
+}
+
+.demo-risk-low {
+    border-color: rgba(16, 185, 129, 0.35);
+    background: rgba(16, 185, 129, 0.08);
+    color: var(--success);
+}
+
+.demo-risk-high,
+.demo-risk-critical {
+    border-color: rgba(239, 68, 68, 0.35);
+    background: rgba(239, 68, 68, 0.08);
+    color: var(--danger);
+}
+
+.score-hero-confidence {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    margin-bottom: 0.5rem;
+}
+
+.score-hero-confidence strong {
+    color: var(--text-main);
+    font-weight: 600;
+}
+
+@keyframes demoRevealIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.success-section--demo .demo-reveal {
+    animation: demoRevealIn 0.55s ease forwards;
+    opacity: 0;
+}
+
+.success-section--demo .demo-reveal-d0 { animation-delay: 0.05s; }
+.success-section--demo .demo-reveal-d1 { animation-delay: 0.12s; }
+.success-section--demo .demo-reveal-d2 { animation-delay: 0.18s; }
+.success-section--demo .demo-reveal-d3 { animation-delay: 0.24s; }
+.success-section--demo .demo-reveal-d4 { animation-delay: 0.3s; }
+.success-section--demo .demo-reveal-d5 { animation-delay: 0.36s; }
+.success-section--demo .demo-reveal-d6 { animation-delay: 0.42s; }
+.success-section--demo .demo-reveal-d7 { animation-delay: 0.48s; }
+
+.demo-expand-card {
+    padding: 0;
+    overflow: hidden;
+    margin-top: 0;
+}
+
+.demo-expand-summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1rem 1.25rem;
+    cursor: pointer;
+    font-weight: 600;
+    color: var(--primary);
+    list-style: none;
+}
+
+.demo-expand-summary::-webkit-details-marker {
+    display: none;
+}
+
+.demo-expand-title {
+    font-size: 1rem;
+}
+
+.demo-expand-chevron {
+    color: var(--text-muted);
+    flex-shrink: 0;
+    transition: transform 0.25s ease;
+}
+
+.demo-expand-card[open] .demo-expand-chevron {
+    transform: rotate(180deg);
+}
+
+.demo-key-findings-list {
+    list-style: none;
+    margin: 0;
+    padding: 0 1.25rem 1.15rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+}
+
+.demo-key-finding {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 0.65rem 0.85rem;
+    border-radius: var(--radius-md);
+    border-left: 3px solid var(--border-color);
+    background: var(--bg-main);
+}
+
+.demo-key-finding-sev {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.demo-key-finding-text {
+    font-size: 0.875rem;
+    line-height: 1.5;
+    color: var(--text-main);
+}
+
+.demo-finding-critical {
+    border-left-color: var(--danger);
+}
+
+.demo-finding-critical .demo-key-finding-sev {
+    color: var(--danger);
+}
+
+.demo-finding-moderate {
+    border-left-color: #D97706;
+}
+
+.demo-finding-moderate .demo-key-finding-sev {
+    color: #D97706;
+}
+
+.demo-finding-low {
+    border-left-color: var(--success);
+}
+
+.demo-finding-low .demo-key-finding-sev {
+    color: var(--success);
+}
+
+.demo-strengths-list {
+    list-style: none;
+    margin: 0;
+    padding: 0 1.25rem 1.15rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.demo-strengths-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    color: var(--text-main);
+    line-height: 1.45;
+}
+
+.demo-strength-icon {
+    flex-shrink: 0;
+    margin-top: 0.125rem;
+    color: var(--success);
+}
+
+.demo-coverage-card {
+    padding: 1.15rem 1.25rem 1.25rem;
+}
+
+.demo-coverage-heading {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--primary);
+    margin: 0 0 0.85rem;
+}
+
+.demo-coverage-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 0.5rem;
+}
+
+.demo-coverage-pill {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    padding: 0.55rem 0.75rem;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+    font-size: 0.75rem;
+}
+
+.demo-coverage-pill.covered {
+    background: rgba(16, 185, 129, 0.06);
+    border-color: rgba(16, 185, 129, 0.22);
+}
+
+.demo-coverage-pill.gap {
+    background: rgba(217, 119, 6, 0.06);
+    border-color: rgba(217, 119, 6, 0.22);
+}
+
+.demo-coverage-name {
+    font-weight: 600;
+    color: var(--text-main);
+}
+
+.demo-coverage-state {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-muted);
+}
+
+.demo-coverage-pill.gap .demo-coverage-state {
+    color: #D97706;
+}
+
+.demo-coverage-pill.covered .demo-coverage-state {
+    color: var(--success);
 }

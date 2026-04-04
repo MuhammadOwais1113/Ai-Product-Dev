@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import {
     Upload,
     FileText,
@@ -13,9 +13,19 @@ import {
     File,
     MapPin,
     ArrowRight,
-    Zap
+    ChevronDown,
+    Sparkles
 } from 'lucide-react';
 import './Compliance.css';
+import {
+    isDemoMode,
+    shouldUseDemoForFile,
+    runDemoStagedPipeline,
+    getDemoPackage,
+    DEMO_PIPELINE_STEPS,
+} from '../demo/demoValidation.js';
+
+const VALIDATE_URL = import.meta.env.VITE_VALIDATE_URL || 'http://localhost:8000/validate';
 
 const Compliance = () => {
     const [uploadStatus, setUploadStatus] = useState('idle'); // idle | uploading | processing | success | error
@@ -24,7 +34,13 @@ const Compliance = () => {
     const [errorMessage, setErrorMessage] = useState('');
     const [validationResult, setValidationResult] = useState(null);
     const [uploadProgress, setUploadProgress] = useState(0);
+    const [demoSession, setDemoSession] = useState(false);
+    const [demoStepIndex, setDemoStepIndex] = useState(0);
+    const [pipelineProgress, setPipelineProgress] = useState(0);
+    const [demoUiMeta, setDemoUiMeta] = useState(null);
+    const [animatedScore, setAnimatedScore] = useState(0);
     const fileInputRef = useRef(null);
+    const demoRunIdRef = useRef(0);
 
     const handleDragOver = useCallback((e) => {
         e.preventDefault();
@@ -75,15 +91,53 @@ const Compliance = () => {
     const handleFileUpload = async () => {
         if (!selectedFile) return;
 
-        setUploadStatus('uploading');
-        setUploadProgress(0);
         setErrorMessage('');
+        setUploadProgress(0);
+        setPipelineProgress(0);
+        setDemoStepIndex(0);
+
+        const useDemo = shouldUseDemoForFile(selectedFile);
+
+        if (useDemo) {
+            setDemoSession(true);
+            setDemoUiMeta(null);
+            setUploadStatus('uploading');
+            const runId = ++demoRunIdRef.current;
+            try {
+                await runDemoStagedPipeline({
+                    runId,
+                    runIdRef: demoRunIdRef,
+                    onUploadProgress: setUploadProgress,
+                    onActiveStepIndex: (i) => {
+                        setDemoStepIndex(i);
+                        if (i >= 1) setUploadStatus('processing');
+                    },
+                    onOverallProgress: setPipelineProgress,
+                });
+                if (runId !== demoRunIdRef.current) return;
+                const { report, meta } = getDemoPackage();
+                setValidationResult(report);
+                setDemoUiMeta(meta);
+                setDemoSession(false);
+                setUploadStatus('success');
+            } catch (err) {
+                setUploadProgress(0);
+                setPipelineProgress(0);
+                setDemoSession(false);
+                setErrorMessage(err.message || 'Demo validation failed.');
+                setUploadStatus('error');
+            }
+            return;
+        }
+
+        setDemoSession(false);
+        setDemoUiMeta(null);
+        setUploadStatus('uploading');
 
         const formData = new FormData();
         formData.append('file', selectedFile);
 
         try {
-            // Simulate upload progress
             const progressInterval = setInterval(() => {
                 setUploadProgress(prev => {
                     if (prev >= 90) {
@@ -94,9 +148,7 @@ const Compliance = () => {
                 });
             }, 200);
 
-            setUploadStatus('uploading');
-
-            const response = await fetch('http://localhost:8000/validate', {
+            const response = await fetch(VALIDATE_URL, {
                 method: 'POST',
                 body: formData,
             });
@@ -106,7 +158,27 @@ const Compliance = () => {
 
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.detail || `Server error (${response.status}). Please try again.`);
+                const detail = errorData.detail;
+                const detailStr = typeof detail === 'string' ? detail : JSON.stringify(detail ?? '');
+                const isQuota =
+                    response.status === 503 ||
+                    /quota|rate limit|billing|RESOURCE_EXHAUSTED|Gemini API quota/i.test(detailStr);
+                const isAuth =
+                    response.status === 401 ||
+                    /api key|GEMINI_API_KEY|expired|invalid.*key|aistudio\.google/i.test(detailStr);
+                const quotaMsg =
+                    'The AI validation service is over its usage limit right now. Wait a few minutes and try again, enable billing in Google AI Studio, or ask your admin to set GEMINI_MODEL in backend/.env to a model with available quota. More info: https://ai.google.dev/gemini-api/docs/rate-limits';
+                let message;
+                if (response.status === 401 || isAuth) {
+                    message =
+                        detailStr ||
+                        'Gemini API key is missing, invalid, or expired. Create a new key at https://aistudio.google.com/apikey and set GEMINI_API_KEY in backend/.env';
+                } else if (isQuota) {
+                    message = quotaMsg;
+                } else {
+                    message = detailStr || `Server error (${response.status}). Please try again.`;
+                }
+                throw new Error(message);
             }
 
             setUploadStatus('processing');
@@ -114,7 +186,6 @@ const Compliance = () => {
             const data = await response.json();
             setValidationResult(data);
             setUploadStatus('success');
-
         } catch (err) {
             setUploadProgress(0);
             if (err.name === 'TypeError' && err.message === 'Failed to fetch') {
@@ -127,11 +198,17 @@ const Compliance = () => {
     };
 
     const resetUpload = () => {
+        demoRunIdRef.current += 1;
         setUploadStatus('idle');
         setSelectedFile(null);
         setErrorMessage('');
         setValidationResult(null);
         setUploadProgress(0);
+        setPipelineProgress(0);
+        setDemoStepIndex(0);
+        setDemoSession(false);
+        setDemoUiMeta(null);
+        setAnimatedScore(0);
         if (fileInputRef.current) {
             fileInputRef.current.value = '';
         }
@@ -162,6 +239,32 @@ const Compliance = () => {
         if (s === 'medium') return 'severity-medium';
         return 'severity-low';
     };
+
+    const getFindingSeverityClass = (severity) => {
+        const s = (severity || '').toLowerCase();
+        if (s === 'critical') return 'demo-finding-critical';
+        if (s === 'moderate' || s === 'medium') return 'demo-finding-moderate';
+        return 'demo-finding-low';
+    };
+
+    useEffect(() => {
+        if (uploadStatus !== 'success' || !validationResult) return;
+        const target =
+            demoUiMeta?.validationScore ?? validationResult.confidence_score ?? 0;
+        setAnimatedScore(0);
+        const start = performance.now();
+        const duration = 1100;
+        let raf = 0;
+        const tick = (now) => {
+            const t = Math.min(1, (now - start) / duration);
+            const ease = 1 - (1 - t) ** 3;
+            setAnimatedScore(Math.round(target * ease));
+            if (t < 1) raf = requestAnimationFrame(tick);
+            else setAnimatedScore(target);
+        };
+        raf = requestAnimationFrame(tick);
+        return () => cancelAnimationFrame(raf);
+    }, [uploadStatus, validationResult, demoUiMeta]);
 
     // ─── IDLE STATE: Upload Zone ───────────────────────────────
     const renderIdleState = () => (
@@ -296,6 +399,63 @@ const Compliance = () => {
         </div>
     );
 
+    // ─── DEMO: staged pipeline (upload + analysis) ─────────────
+    const renderDemoPipelineState = () => {
+        const phaseLabel =
+            uploadStatus === 'uploading' ? 'Securing upload' : 'AI compliance pipeline';
+        return (
+            <div className="processing-section animate-fade-in">
+                <div className="processing-card card demo-pipeline-card">
+                    <div className="demo-pipeline-badge">
+                        <Sparkles size={14} />
+                        <span>Demo</span>
+                    </div>
+                    <div className="processing-icon-wrap analyzing demo-pipeline-icon">
+                        <div className="pulse-ring"></div>
+                        <div className="pulse-ring delay-1"></div>
+                        <FileCheck size={36} className="analyzing-icon" />
+                    </div>
+                    <h3 className="processing-title">{phaseLabel}</h3>
+                    <p className="processing-text">
+                        Processing <strong>{selectedFile?.name}</strong> — simulated intelligence layer (no live API).
+                    </p>
+                    <div className="demo-overall-progress">
+                        <div className="progress-bar">
+                            <div
+                                className="progress-fill demo-progress-fill"
+                                style={{ width: `${Math.min(pipelineProgress, 100)}%` }}
+                            />
+                        </div>
+                        <span className="progress-label">{Math.round(Math.min(pipelineProgress, 100))}%</span>
+                    </div>
+                    <ul className="demo-pipeline-steps" aria-label="Processing steps">
+                        {DEMO_PIPELINE_STEPS.map((label, idx) => {
+                            const done = idx < demoStepIndex;
+                            const active = idx === demoStepIndex;
+                            return (
+                                <li
+                                    key={label}
+                                    className={`demo-pipeline-step ${done ? 'done' : ''} ${active ? 'active' : ''}`}
+                                >
+                                    <span className="demo-step-dot" aria-hidden>
+                                        {done ? (
+                                            <CheckCircle size={16} />
+                                        ) : active ? (
+                                            <Loader2 size={16} className="spinner-icon-sm demo-step-spin" />
+                                        ) : (
+                                            <span className="demo-step-pending-dot" />
+                                        )}
+                                    </span>
+                                    <span className="demo-step-label">{label}</span>
+                                </li>
+                            );
+                        })}
+                    </ul>
+                </div>
+            </div>
+        );
+    };
+
     // ─── ERROR STATE ───────────────────────────────────────────
     const renderErrorState = () => (
         <div className="processing-section animate-fade-in">
@@ -320,18 +480,34 @@ const Compliance = () => {
 
     // ─── SUCCESS STATE: Results Dashboard ──────────────────────
     const renderSuccessState = () => {
-        const score = validationResult?.confidence_score ?? 0;
+        const apiConfidence = validationResult?.confidence_score ?? 0;
+        const scoreForRing = demoUiMeta?.validationScore ?? apiConfidence;
         const contradictions = validationResult?.contradictions ?? [];
         const missingClauses = validationResult?.missing_clauses ?? [];
-        const totalIssues = contradictions.length + missingClauses.length;
+        const validationIssues = validationResult?.validation_issues ?? [];
+        const riskyClauses = validationResult?.risky_clauses ?? [];
+        const recommendations = validationResult?.recommendations ?? [];
+        const totalIssues =
+            contradictions.length +
+            missingClauses.length +
+            validationIssues.length +
+            riskyClauses.length;
+        const ringArc = Math.min(100, Math.max(0, animatedScore));
 
         return (
-            <div className="success-section animate-fade-in">
+            <div className={`success-section animate-fade-in${demoUiMeta ? ' success-section--demo' : ''}`}>
                 {/* ── Top bar: status + action ─────────────────── */}
                 <div className="success-header">
-                    <div className="success-badge">
-                        <CheckCircle size={20} />
-                        <span>Validation Complete</span>
+                    <div className="success-header-badges">
+                        <div className="success-badge">
+                            <CheckCircle size={20} />
+                            <span>Validation Complete</span>
+                        </div>
+                        {demoUiMeta && (
+                            <span className={`demo-risk-badge demo-risk-${String(demoUiMeta.riskLevel).toLowerCase()}`}>
+                                Overall risk · {demoUiMeta.riskLevel}
+                            </span>
+                        )}
                     </div>
                     <button className="btn btn-primary" onClick={resetUpload} id="new-upload-btn">
                         <RotateCcw size={16} />
@@ -340,9 +516,9 @@ const Compliance = () => {
                 </div>
 
                 {/* ── Confidence Score Hero ────────────────────── */}
-                <div className="score-hero card">
+                <div className="score-hero card demo-reveal demo-reveal-d0">
                     <div className="score-hero-left">
-                        <div className={`score-ring-lg ${getScoreColor(score)}`}>
+                        <div className={`score-ring-lg ${getScoreColor(scoreForRing)}`}>
                             <svg viewBox="0 0 120 120" className="score-svg">
                                 <circle
                                     cx="60" cy="60" r="52"
@@ -354,18 +530,25 @@ const Compliance = () => {
                                     strokeWidth="8"
                                     strokeLinecap="round"
                                     className="score-arc"
-                                    strokeDasharray={`${(score / 100) * 327} 327`}
+                                    strokeDasharray={`${(ringArc / 100) * 327} 327`}
                                     transform="rotate(-90 60 60)"
                                 />
                             </svg>
                             <div className="score-ring-inner">
-                                <span className="score-number">{score}</span>
+                                <span className="score-number">{animatedScore}</span>
                                 <span className="score-of">/100</span>
                             </div>
                         </div>
                     </div>
                     <div className="score-hero-right">
-                        <h2 className="score-hero-title">Confidence Score</h2>
+                        <h2 className="score-hero-title">
+                            {demoUiMeta ? 'Validation score' : 'Confidence Score'}
+                        </h2>
+                        {demoUiMeta && (
+                            <p className="score-hero-confidence">
+                                Model confidence · <strong>{apiConfidence}%</strong>
+                            </p>
+                        )}
                         <p className="score-hero-file">
                             <FileText size={14} />
                             {selectedFile?.name}
@@ -393,9 +576,79 @@ const Compliance = () => {
                     </div>
                 </div>
 
+                {(validationResult?.document_summary ||
+                    (validationResult?.processing_notes?.length > 0)) && (
+                    <details className="card document-meta-details animate-fade-in" style={{ marginTop: '1rem' }}>
+                        <summary className="document-meta-summary" style={{ cursor: 'pointer', fontWeight: 600 }}>
+                            Document summary and processing notes
+                        </summary>
+                        <div style={{ marginTop: '0.75rem' }}>
+                            {validationResult?.document_summary && (
+                                <p className="processing-text">{validationResult.document_summary}</p>
+                            )}
+                            {validationResult?.processing_notes?.length > 0 && (
+                                <ul className="processing-notes-list">
+                                    {validationResult.processing_notes.map((note, i) => (
+                                        <li key={i}>{note}</li>
+                                    ))}
+                                </ul>
+                            )}
+                        </div>
+                    </details>
+                )}
+
+                {demoUiMeta && (
+                    <>
+                        <details className="card demo-expand-card demo-reveal demo-reveal-d1" open>
+                            <summary className="demo-expand-summary">
+                                <span className="demo-expand-title">Key findings</span>
+                                <ChevronDown size={18} className="demo-expand-chevron" aria-hidden />
+                            </summary>
+                            <ul className="demo-key-findings-list">
+                                {demoUiMeta.keyFindings.map((f, i) => (
+                                    <li key={i} className={`demo-key-finding ${getFindingSeverityClass(f.severity)}`}>
+                                        <span className="demo-key-finding-sev">{f.severity}</span>
+                                        <span className="demo-key-finding-text">{f.text}</span>
+                                    </li>
+                                ))}
+                            </ul>
+                        </details>
+
+                        <details className="card demo-expand-card demo-reveal demo-reveal-d2">
+                            <summary className="demo-expand-summary">
+                                <span className="demo-expand-title">Strengths detected</span>
+                                <ChevronDown size={18} className="demo-expand-chevron" aria-hidden />
+                            </summary>
+                            <ul className="demo-strengths-list">
+                                {demoUiMeta.positiveFindings.map((t, i) => (
+                                    <li key={i}>
+                                        <CheckCircle size={16} className="demo-strength-icon" />
+                                        {t}
+                                    </li>
+                                ))}
+                            </ul>
+                        </details>
+
+                        <div className="card demo-coverage-card demo-reveal demo-reveal-d3">
+                            <h3 className="demo-coverage-heading">Clause coverage summary</h3>
+                            <div className="demo-coverage-grid">
+                                {demoUiMeta.clauseCoverage.map((row) => (
+                                    <div
+                                        key={row.name}
+                                        className={`demo-coverage-pill ${row.covered ? 'covered' : 'gap'}`}
+                                    >
+                                        <span className="demo-coverage-name">{row.name}</span>
+                                        <span className="demo-coverage-state">{row.covered ? 'Present' : 'Gap'}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </>
+                )}
+
                 {/* ── Critical Contradictions (Ghost Data) ─────── */}
                 {contradictions.length > 0 && (
-                    <div className="results-section">
+                    <div className={`results-section${demoUiMeta ? ' demo-reveal demo-reveal-d4' : ''}`}>
                         <div className="results-section-header">
                             <div className="results-section-title-wrap">
                                 <ShieldAlert size={20} className="text-danger" />
@@ -434,7 +687,7 @@ const Compliance = () => {
 
                 {/* ── Missing Mandatory Clauses ───────────────── */}
                 {missingClauses.length > 0 && (
-                    <div className="results-section">
+                    <div className={`results-section${demoUiMeta ? ' demo-reveal demo-reveal-d5' : ''}`}>
                         <div className="results-section-header">
                             <div className="results-section-title-wrap">
                                 <AlertTriangle size={20} className="text-warning-dark" />
@@ -465,8 +718,78 @@ const Compliance = () => {
                     </div>
                 )}
 
+                {validationIssues.length > 0 && (
+                    <div className={`results-section${demoUiMeta ? ' demo-reveal demo-reveal-d5' : ''}`}>
+                        <div className="results-section-header">
+                            <div className="results-section-title-wrap">
+                                <AlertTriangle size={20} className="text-warning-dark" />
+                                <h3 className="results-section-title">Validation issues (by section)</h3>
+                            </div>
+                            <span className="results-count badge-warning">{validationIssues.length}</span>
+                        </div>
+                        <div className="results-cards">
+                            {validationIssues.map((item, idx) => (
+                                <div key={idx} className="result-card card" id={`val-issue-${idx}`}>
+                                    <div className="result-card-body">
+                                        <span className={`severity-badge ${getSeverityClass(item.severity)}`}>
+                                            {item.severity}
+                                        </span>
+                                        <p className="result-card-description">{item.description}</p>
+                                        <p className="result-card-meta text-muted">
+                                            {item.chunk_index >= 0
+                                                ? `Chunk ${item.chunk_index}${item.chunk_label ? ` — ${item.chunk_label}` : ''}`
+                                                : (item.chunk_label || 'Document-wide')}
+                                        </p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {riskyClauses.length > 0 && (
+                    <div className={`results-section${demoUiMeta ? ' demo-reveal demo-reveal-d6' : ''}`}>
+                        <div className="results-section-header">
+                            <div className="results-section-title-wrap">
+                                <ShieldAlert size={20} className="text-danger" />
+                                <h3 className="results-section-title">Risky clauses</h3>
+                            </div>
+                            <span className="results-count badge-danger">{riskyClauses.length}</span>
+                        </div>
+                        <div className="results-cards">
+                            {riskyClauses.map((item, idx) => (
+                                <div key={idx} className="result-card card" id={`risky-${idx}`}>
+                                    <div className="result-card-body">
+                                        <strong>{item.clause_or_issue}</strong>
+                                        <p className="result-card-description">{item.risk_description}</p>
+                                        {item.chunk_index >= 0 && (
+                                            <p className="result-card-meta text-muted">
+                                                Chunk {item.chunk_index}{item.chunk_label ? ` — ${item.chunk_label}` : ''}
+                                            </p>
+                                        )}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {recommendations.length > 0 && (
+                    <div className={`results-section${demoUiMeta ? ' demo-reveal demo-reveal-d7' : ''}`}>
+                        <h3 className="results-section-title">Recommendations</h3>
+                        <ul className="recommendations-list">
+                            {recommendations.map((r, idx) => (
+                                <li key={idx}>{r}</li>
+                            ))}
+                        </ul>
+                    </div>
+                )}
+
                 {/* ── No issues found state ───────────────────── */}
-                {contradictions.length === 0 && missingClauses.length === 0 && (
+                {contradictions.length === 0 &&
+                    missingClauses.length === 0 &&
+                    validationIssues.length === 0 &&
+                    riskyClauses.length === 0 && (
                     <div className="no-issues-card card">
                         <CheckCircle size={40} className="text-success" />
                         <h3>No Issues Detected</h3>
@@ -485,6 +808,13 @@ const Compliance = () => {
                     <p className="page-subtitle">
                         Upload a rental agreement PDF to scan for regulatory compliance and missing clauses.
                     </p>
+                    {isDemoMode() && (
+                        <p className="page-demo-banner">
+                            <Sparkles size={14} aria-hidden />
+                            Demo mode — uploads use the staged mock (no Gemini). In development this is the default;
+                            set <code className="page-demo-code">VITE_DEMO_MODE=false</code> to call the live API.
+                        </p>
+                    )}
                 </div>
                 {uploadStatus !== 'idle' && uploadStatus !== 'error' && (
                     <button className="btn btn-outline" onClick={resetUpload}>
@@ -494,8 +824,9 @@ const Compliance = () => {
             </div>
 
             {uploadStatus === 'idle' && renderIdleState()}
-            {uploadStatus === 'uploading' && renderUploadingState()}
-            {uploadStatus === 'processing' && renderProcessingState()}
+            {uploadStatus === 'uploading' && !demoSession && renderUploadingState()}
+            {uploadStatus === 'processing' && !demoSession && renderProcessingState()}
+            {demoSession && (uploadStatus === 'uploading' || uploadStatus === 'processing') && renderDemoPipelineState()}
             {uploadStatus === 'error' && renderErrorState()}
             {uploadStatus === 'success' && renderSuccessState()}
         </div>

@@ -17,8 +17,14 @@ logger = logging.getLogger("legaldraft")
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
-from services import pdf_extractor, llm_engine
-from models.schemas import ValidationResult
+from services import llm_engine
+from services.llm_engine import (
+    GeminiAuthError,
+    GeminiInvalidModelError,
+    GeminiQuotaError,
+)
+from services import text_pipeline
+from models.schemas import FullValidationReport
 
 app = FastAPI(
     title="LegalDraft Validation API",
@@ -40,21 +46,35 @@ app.add_middleware(
 )
 
 
+@app.get("/")
+async def root():
+    """Landing when opening the API base URL in a browser."""
+    return {
+        "service": "LegalDraft Validation API",
+        "message": "Use the React app on port 5173 to validate PDFs, or open /docs for the API explorer.",
+        "endpoints": {
+            "health": "/health",
+            "validate": "POST /validate (multipart PDF)",
+            "docs": "/docs",
+        },
+    }
+
+
 @app.get("/health")
 async def health_check():
     """Health check endpoint."""
     return {"status": "ok", "service": "LegalDraft Validation API"}
 
 
-@app.post("/validate", response_model=ValidationResult)
+@app.post("/validate", response_model=FullValidationReport)
 async def validate_agreement(file: UploadFile = File(...)):
     """
     Validate a rental agreement PDF.
 
     1. Accepts a PDF file upload
-    2. Extracts text using PyMuPDF
-    3. Sends text to Gemini for analysis
-    4. Returns structured validation results
+    2. Extracts and cleans text (PyMuPDF + text pipeline)
+    3. Validates with Gemini: ``single`` mode = one request; ``chunked`` = per-chunk + merge (see GEMINI_VALIDATION_MODE)
+    4. Returns structured validation results (legacy fields + extended report)
     """
     # --- File validation ---
     if not file.filename:
@@ -82,18 +102,36 @@ async def validate_agreement(file: UploadFile = File(...)):
             status_code=400, detail="File too large. Maximum size is 20MB."
         )
 
-    # --- Extract text from PDF ---
+    # --- Extract and clean text from PDF ---
     try:
-        document_text = pdf_extractor.extract_text(file_bytes)
-        logger.info(f"Extracted {len(document_text)} chars from '{file.filename}'")
+        document_text = text_pipeline.parse_pdf_text(file_bytes)
+        logger.info(f"Parsed {len(document_text)} chars from '{file.filename}'")
     except ValueError as e:
         logger.warning(f"PDF extraction failed: {e}")
-        raise HTTPException(status_code=422, detail=str(e))
+        raise HTTPException(
+            status_code=422,
+            detail=str(e) or "Malformed PDF or no extractable text.",
+        )
 
-    # --- Send to LLM for validation ---
+    if len(document_text.strip()) < 40:
+        raise HTTPException(
+            status_code=422,
+            detail="Extracted text is empty or too short to validate.",
+        )
+
+    # --- Chunked LLM validation + merge ---
     try:
         result = await llm_engine.validate_agreement(document_text)
         logger.info(f"Validation successful for '{file.filename}' — score: {result.confidence_score}")
+    except GeminiAuthError as e:
+        logger.error(f"Gemini API key error: {e}")
+        raise HTTPException(status_code=401, detail=str(e))
+    except GeminiQuotaError as e:
+        logger.error(f"LLM quota / rate limit: {e}")
+        raise HTTPException(status_code=503, detail=str(e))
+    except GeminiInvalidModelError as e:
+        logger.error(f"Invalid Gemini model: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
     except RuntimeError as e:
         logger.error(f"LLM validation failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
